@@ -40,6 +40,8 @@ public:
     MatrixNd Hinf_K_gamma;
 
     void LRSetup();
+    JVec HinfControl( JVec q,JVec dq,JVec q_des,JVec dq_des,JVec ddq_des,JVec eint);
+    void JointTrajectory(std::vector<JVec> way_points, std::vector<double> delays, double now, JVec& q_des,JVec& q_dot_des,JVec& q_ddot_des);
 };
 
 #endif // LR_CONTROL_H

@@ -56,7 +56,7 @@ LR_Control::LR_Control() {
     this->Hinf_Kv = MatrixNd::Zero();
     this->Hinf_K_gamma = MatrixNd::Zero();
     JVec invL2sqr=JVec::Zero();
-    invL2sqr<<800.0,600.0,500.0,500.0,500.0,600.0,600.0;
+    invL2sqr<<600.0,600.0,500.0,500.0,500.0,600.0,600.0;
     JVec K=JVec::Zero();
     K<<50,30,30,3,3,0.1,0.1;
     for (int i=0; i<JOINTNUM; ++i)
@@ -138,7 +138,44 @@ LR_Control::LR_Control() {
     }
 }
 
+JVec LR_Control::HinfControl( JVec q,JVec dq,JVec q_des,JVec dq_des,JVec ddq_des,JVec eint){
+    JVec e = q_des-q;
+    JVec edot = dq_des-dq;
+    MassMat Mmat = lr::MassMatrix(q,this->Mlist, this->Glist, this->Slist);
+    JVec C = lr::VelQuadraticForces(q, dq,this->Mlist, this->Glist, this->Slist);
+    JVec G = lr::GravityForces(q,this->g,this->Mlist, this->Glist, this->Slist) ; 
+    JVec ddq_ref = ddq_des+Hinf_Kv*edot+Hinf_Kp*e;
+    JVec torq = Mmat*ddq_ref+C+G+(Hinf_K_gamma)*(edot + Hinf_Kv*e + Hinf_Kp*eint);
+    
+    return torq;
+}
+void LR_Control::JointTrajectory(std::vector<JVec> way_points, std::vector<double> delays, double now, JVec& q_des,JVec& q_dot_des,JVec& q_ddot_des){
+    std::vector<double> time_list;
+    time_list.push_back(0);
+    double prev_time=0; 
+    int idx = 0;
+    int N = way_points.size();
+    int N_delay = delays.size();
+    time_list.resize(N_delay+1);
+    double sum_delays = 0;
+    for(int i =0;i<N_delay;i++){
+        sum_delays+=delays.at(i);
 
+        time_list.at(i+1)=sum_delays;
+        if(now>=time_list.at(i) && now < time_list.at(i+1)){
+           idx = i;
+        }
+    }
+    // std::cout<<q_ddot_des.transpose()<<"\t";
+    //  std::cout<<"tT : "<<time_list.at(idx+1)-time_list.at(idx)<<" , ";
+    //  std::cout<<"t0 : "<<now-time_list.at(idx)<<std::endl;
+
+    if(now>=time_list.at(time_list.size()-1)){
+        idx = N_delay-1;
+    }
+    lr::JointTrajectory(  way_points.at(idx),   way_points.at(idx+1),  time_list.at(idx+1)-time_list.at(idx), now-time_list.at(idx)  , 0 , q_des, q_dot_des, q_ddot_des);
+    
+}
 void LR_Control::LRSetup(){
 	Json::Value rootr;
 	bool ret = ReadLRData("/opt/RobotInfo/LR_info.json",rootr);

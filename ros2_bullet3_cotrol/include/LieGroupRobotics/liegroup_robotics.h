@@ -75,6 +75,7 @@ namespace lr {
     Matrix6d dlog6(const Vector6d& lambda);
     Matrix6d ddlog6(const Vector6d& lambda, const Vector6d& lambda_dot) ;    
     void LieScrewTrajectory(const SE3 X0,const SE3 XT,const Vector6d V0,const Vector6d VT,const Vector6d dV0,const Vector6d dVT,double Tf,int N,std::vector<SE3>&Xd_list,std::vector<Vector6d>&Vd_list,std::vector<Vector6d>&dVd_list);
+    void JointTrajectory(const JVec q0, const JVec qT, double Tf, double t , int method , JVec& q_des, JVec& q_dot_des, JVec& q_ddot_des) ;
 }
 
 

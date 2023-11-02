@@ -848,5 +848,22 @@ void LieScrewTrajectory(const SE3 X0,const SE3 XT,const Vector6d V0,const Vector
 	
 	
 }	
+
+void JointTrajectory(const JVec q0, const JVec qT, double Tf, double t , int method , JVec& q_des, JVec& q_dot_des, JVec& q_ddot_des) {
+	if(t>Tf)t = Tf;
+	if(t<0) t= 0;
+	double st;
+	double dst;
+	double ddst;
+	Vector3d ret = QuinticTimeScalingKinematics(0,1,0,0,0,0,Tf,t) ;
+	st= ret(0);
+	dst = ret(1);
+	ddst= ret(2);
+		
+	q_des =st * qT + (1 - st)*q0;
+	q_dot_des =dst * qT  - dst*q0;
+	q_ddot_des =ddst * qT  - ddst*q0;
+	
+}
 }
 

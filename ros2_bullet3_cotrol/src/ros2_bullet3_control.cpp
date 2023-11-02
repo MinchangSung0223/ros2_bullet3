@@ -57,6 +57,29 @@ class RobotControlPublisherNode : public rclcpp::Node
     system_clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
     rt_clock = new RealtimeClock(clock);
     robot_info.des.tau = JVec::Zero();
+    way_points.resize(10);
+    delays.resize(9);
+    way_points.at(0) = JVec(0,0,0,0,0,0,0);
+    way_points.at(1) = JVec(0,0,0,1.5708,0,1.5708,0);
+    way_points.at(2) = JVec(1.0,1.0,1.0,1.0,1.0,1.0,1.0);
+    way_points.at(3) = JVec(0,0,0,0.0,0,0.0,0);
+    way_points.at(4) = JVec(1.5708,0,0,0,0,0,0);
+    way_points.at(5) = JVec(0,0,0,0,0,0,0);
+    way_points.at(6) = JVec(-1.5708,0,0,-1.5708,0,0,0);
+    way_points.at(7) = JVec(-1.5708,0,0,0,0,0,0);
+    way_points.at(8) = JVec(0,0,0,1.5708,0,1.5708,0);
+    way_points.at(9) = JVec(0,0,0,0,0,0,0);
+
+    delays.at(0) =10.0;
+    delays.at(1) =10.0;
+    delays.at(2) =10.0;
+    delays.at(3) =10.0;
+    delays.at(4) =5.0;
+    delays.at(5) =5.0;
+    delays.at(6) =5.0;
+    delays.at(7) =5.0;
+    delays.at(8) =5.0;
+
   }
 private:
   rclcpp::TimerBase::SharedPtr robot_control_timer_;
@@ -67,7 +90,15 @@ private:
   RealtimeClock *rt_clock;
   rclcpp::Time last_rt_time;
   JVec torques=JVec::Zero();
-
+  JVec q_des=JVec(0.0,0.0,0.0,1.5708,0.0,1.5708,0.0);
+  JVec q0 = JVec::Zero();
+  JVec qT = JVec(0.0,0.0,0.0,1.5708,0.0,1.5708,0.0);
+  JVec q_dot_des=JVec::Zero();
+  JVec q_ddot_des=JVec::Zero();
+  JVec eint =JVec::Zero();
+  std::vector<JVec> way_points;
+  std::vector<double> delays;
+  double traj_time =0;
     void publish_robot_control()
     {
   // Check if it's possible to lock the realtime publisher
@@ -75,28 +106,43 @@ private:
       if (robot_control_publisher_->trylock())
       {
           gt +=dt;
-          JVec torques = lr::GravityForces(robot_info.act.q,control->g,control->Mlist, control->Glist, control->Slist);
-          torques[0] = torques[0]+50.0;
+          traj_time +=dt;
+          if(traj_time>10){
+            qT = q0;
+            q0 = q;
+            traj_time =0;
+            }
+
+          control->JointTrajectory(way_points, delays, gt,q_des,q_dot_des,q_ddot_des);
+          //std::cout<<q_des<<std::endl;
+          //control->JointTrajectory( q0, qT, 10, traj_time  , q_des,  q_dot_des, q_ddot_des);
+          //lr::JointTrajectory(  q0,   qT, 10, traj_time , 0 , q_des, q_dot_des, q_ddot_des);
+          JVec q = robot_info.act.q;
+          JVec q_dot = robot_info.act.q_dot;
+          JVec torques =control->HinfControl(q,q_dot,q_des,q_dot_des,q_ddot_des,eint);
+          //JVec torques = lr::GravityForces(q, control->g,control->Mlist,control->Glist,control->Slist);
+          JVec e = q_des-q;
+          //eint += e*dt;
+          //std::cout<<"q_des:"<<q_des.transpose()<<std::endl;
+          //std::cout<<"q_dot_des:"<<q_dot_des.transpose()<<std::endl;
+          //std::cout<<"q_ddot_des:"<<q_ddot_des.transpose()<<std::endl;
+
           robot_control_publisher_->msg_.header.stamp = this->now();
           robot_control_publisher_->msg_.name = {"joint_0","joint_1","joint_2","joint_3","joint_4","joint_5","joint_6"};
-          robot_control_publisher_->msg_.robot_joint_position={robot_info.act.q[0],robot_info.act.q[1],robot_info.act.q[2],robot_info.act.q[3],robot_info.act.q[4],robot_info.act.q[5],robot_info.act.q[6]};
+          robot_control_publisher_->msg_.robot_joint_position={e[0],e[1],e[2],e[3],e[4],e[5],e[6]};
           robot_control_publisher_->msg_.robot_joint_velocity={0.0,0.0,0.0,0.0,0.0,0.0,0.0};
           robot_control_publisher_->msg_.robot_joint_torque={torques[0],torques[1],torques[2],torques[3],torques[4],torques[5],torques[6]};
-          robot_control_publisher_->msg_.robot_external_wrench={10,10,10,0,0,0};
-
+          robot_control_publisher_->msg_.robot_external_wrench={0,0,0,0,0,0};
           robot_control_publisher_->unlockAndPublish();
       }        
       }
 
 void subscribe_robot_states(const hyu_robot_states::msg::RobotStates::SharedPtr msg)
   {
-    robot_info.act.q[0]=msg->robot_joint_position[0];
-    robot_info.act.q[1]=msg->robot_joint_position[1];
-    robot_info.act.q[2]=msg->robot_joint_position[2];
-    robot_info.act.q[3]=msg->robot_joint_position[3];
-    robot_info.act.q[4]=msg->robot_joint_position[4];
-    robot_info.act.q[5]=msg->robot_joint_position[5];
-    robot_info.act.q[6]=msg->robot_joint_position[6];
+    for(int i = 0;i<JOINTNUM;i++){
+      robot_info.act.q[i]=msg->robot_joint_position[i];
+      robot_info.act.q_dot[i]=msg->robot_joint_velocity[i];
+    }
   }
 };
 

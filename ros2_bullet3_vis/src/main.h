@@ -15,24 +15,7 @@
 #include <sstream>
 #include <thread>
 
-//QT
 
-#include <QApplication>
-#include <QSplitter>
-#include <QTreeView>
-#include <QListView>
-#include <QTableView>
-#include <QStandardItemModel>
-#include <QScreen>
-
-#include "DarkStyle.h"
-#include "framelesswindow.h"
-#include "mainwindow.h"
-#include <iostream>
-
-#include <QApplication>
-#include <QResource>
-#include <QTextCodec>
 //Bullet
 #include "b3RobotSimulatorClientAPI.h"
 #include "../Utils/b3Clock.h"

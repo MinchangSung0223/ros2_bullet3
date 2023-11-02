@@ -101,9 +101,9 @@ set(QTWIDGET_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include/QtWidgets)
 set(DARKSTYLE_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include/DarkStyleWindow)
 set(QCUSTOMPLOT_HEADERS_DIR ${PROJECT_SOURCE_DIR}/include/QCustomPlot_library/lib)
 set(SUBDIRECTORIES
-	"include/QtWidgets"
-	"include/DarkStyleWindow"
-	"include/QCustomPlot_library"
+	#"include/QtWidgets"
+	#"include/DarkStyleWindow"
+	# "include/QCustomPlot_library"
 )
 # for문을 사용하여 각 하위 디렉토리를 추가
 foreach(SUBDIR ${SUBDIRECTORIES})
@@ -117,14 +117,14 @@ set(QT_LIBRARIES
 	Qt5::Gui
 	Qt5::Network
 	Qt5::Quick
-	qcustomplot
+	# qcustomplot
 )
 SET(QT_SRCS src/mainwindow.cpp src/mainwindow.h src/mainwindow.ui)
 
 INCLUDE_DIRECTORIES( 
-		${QTWIDGET_HEADERS_DIR}
-		${DARKSTYLE_HEADERS_DIR}		
-    ${QCUSTOMPLOT_HEADERS_DIR}
+		#${QTWIDGET_HEADERS_DIR}
+		#${DARKSTYLE_HEADERS_DIR}		
+    # ${QCUSTOMPLOT_HEADERS_DIR}
   )
 
 # find dependencies
@@ -210,7 +210,7 @@ SET(RobotSimulator_SRCS_GUI
 	${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator/../../examples/SharedMemory/PhysicsServerExampleBullet2.cpp
 	${BULLET_PHYSICS_SOURCE_DIR}/examples/RobotSimulator/../../examples/SharedMemory/SharedMemoryInProcessPhysicsC_API.cpp		
 )	
-add_executable(ros2_bullet3_vis src/ros2_bullet3_vis.cpp ${QT_SRCS} ${RobotSimulator_SRCS_GUI})
+add_executable(ros2_bullet3_vis src/ros2_bullet3_vis.cpp ${RobotSimulator_SRCS_GUI})
 target_include_directories(ros2_bullet3_vis PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -227,22 +227,22 @@ target_include_directories(ros2_bullet3_vis PUBLIC
   ${LIEGROUP_ROBOTICS_HEADERS_DIR}    
   ${QTWIDGET_HEADERS_DIR}
   ${DARKSTYLE_HEADERS_DIR}		
-    ${QCUSTOMPLOT_HEADERS_DIR}  
+    # ${QCUSTOMPLOT_HEADERS_DIR}  
     ${OpenCV_INCLUDE_DIRS}
   )
   target_link_libraries(${PROJECT_NAME} jsoncpp_lib)
   target_link_libraries(${PROJECT_NAME}
-    ${BULLET_LIBRARIES} ${COMMON_LIBRARIES}  ${QT_LIBRARIES} ${OpenCV_LIBRARIES}
+    ${BULLET_LIBRARIES} ${COMMON_LIBRARIES}   ${OpenCV_LIBRARIES}
   )  
   target_compile_definitions(${PROJECT_NAME} PUBLIC -DBT_USE_DOUBLE_PRECISION)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE QCUSTOMPLOT_USE_LIBRARY)
+  # target_compile_definitions(${PROJECT_NAME} PRIVATE QCUSTOMPLOT_USE_LIBRARY)
 
 install(TARGETS ros2_bullet3_vis  DESTINATION lib/${PROJECT_NAME})
-install(TARGETS qcustomplot
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+# install(TARGETS qcustomplot
+#   ARCHIVE DESTINATION lib
+#   LIBRARY DESTINATION lib
+#   RUNTIME DESTINATION bin
+# )
 ament_target_dependencies(${PROJECT_NAME} ${ament_target_dependencies_list})
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
