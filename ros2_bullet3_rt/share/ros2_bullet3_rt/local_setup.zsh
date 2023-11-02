@@ -1,0 +1,1 @@
+/home/robot/robot_ws/catkin_ws/build/ros2_bullet3_rt/ament_cmake_environment_hooks/local_setup.zsh

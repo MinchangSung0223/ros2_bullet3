@@ -1,0 +1,1 @@
+/home/robot/robot_ws/catkin_ws/build/ros2_bullet3_rt/ament_cmake_core/ros2_bullet3_rtConfig-version.cmake
